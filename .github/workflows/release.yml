@@ -19,7 +19,9 @@ jobs:
         - name: Get latest tag
           id: version
           run: |
-            apt update && apt install -y wget
+            sudo apt-get update -y
+            sudo apt-get install -y wget
+
             wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
             chmod +x /usr/local/bin/yq
         
