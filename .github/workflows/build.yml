@@ -1,33 +1,60 @@
 name: Builds
-on: [push]
+on:
+  push:
+  workflow_call:
+    inputs:
+      artifact-name:
+        description: Base name for uploaded artifacts
+        required: true
+        type: string
+
 jobs:
   build-binary-and-package:
     runs-on: ubuntu-latest
+    outputs:
+      deb-artifact: ${{ steps.upload-deb.outputs.artifact-id }}
+      rpm-artifact: ${{ steps.upload-rpm.outputs.artifact-id }}
+      bin-artifact: ${{ steps.upload-bin.outputs.artifact-id }}
     container:
       image: rust:bullseye
     steps:
       - name: Check out repository code
         uses: actions/checkout@v5
-      - run: apt update && apt install protobuf-compiler -y
-      - run: cargo build --release
-      - name: Upload binary
+
+      - name: Install system dependencies
+        run: apt-get update && apt-get install -y protobuf-compiler
+
+      - name: Build release binary
+        run: cargo build --release
+
+      - name: Upload compiled binary
         uses: actions/upload-artifact@v4
+        id: upload-bin
         with:
-          name: compiled-binary
-          path: target/release/* 
-      - name: intall cargo dependencies
+          name: ${{ inputs.artifact-name }}compiled-binary
+          path: target/release/*
+
+      - name: Install cargo packaging tools
         run: cargo install cargo-deb cargo-generate-rpm
-      - name: build debian packages
+
+      - name: Build Debian package
         run: cargo deb
-      - name: build rpm packages
+        continue-on-error: true   # optional
+
+      - name: Build RPM package
         run: cargo generate-rpm
-      - name: Upload deb_package
+        continue-on-error: true   # optional
+
+      - name: Upload Debian package
         uses: actions/upload-artifact@v4
+        id: upload-deb
         with:
-          name: deb-package
+          name: ${{ inputs.artifact-name }}deb-package
           path: target/debian/*
-      - name: Upload rpm_package
+
+      - name: Upload RPM package
         uses: actions/upload-artifact@v4
+        id: upload-rpm   
         with:
-          name: rpm-package
+          name: ${{ inputs.artifact-name }}rpm-package
           path: target/generate-rpm/*

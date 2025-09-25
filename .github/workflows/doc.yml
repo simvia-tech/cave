@@ -2,6 +2,10 @@ name: "Build doc and deploy to Github pages"
 
 on:
   push:
+    branches: [main]
+  pull_request:
+    branches: [main] 
+    types: [closed]
 
 permissions:
   contents: read

@@ -1,0 +1,18 @@
+name: PR Build and Tests
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize, edited]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/workflows/build.yml
+        id: build
+        with:
+          artifact-name: pr
+      - uses: ./.github/workflows/e2e.yml
+        with:
+          artifact-id: ${{ steps.build.outputs.deb-artifact }}
