@@ -18,7 +18,7 @@ jobs:
           merge-multiple: true
       - name: install package
         run: |
-          sudo dpkg -i ./deb/*.deb
+          sudo dpkg -i ./deb/*.deb || true
           sudo apt-get update
           sudo apt-get -f install -y
       - name: display cave help

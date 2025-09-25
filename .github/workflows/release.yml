@@ -52,7 +52,7 @@ jobs:
             GITHUB_TOKEN: ${{ github.token }}
           with:
             upload_url: ${{ needs.create-release.outputs.upload_url }}
-            asset_path: ./deb/*.deb
+            asset_path: ./deb
             asset_name: ${{ github.event.repository.name }}_${{ needs.create-release.outputs.version }}.deb
             asset_content_type: application/vnd.debian.binary-package
         
@@ -68,7 +68,7 @@ jobs:
             GITHUB_TOKEN: ${{ github.token }}
           with:
             upload_url: ${{ needs.create-release.outputs.upload_url }}
-            asset_path: ./rpm/*.rpm
+            asset_path: ./rpm
             asset_name: ${{ github.event.repository.name }}_${{ needs.create-release.outputs.version }}.rpm
             asset_content_type: application/x-rpm
 
@@ -78,14 +78,12 @@ jobs:
             artifact-ids: ${{ needs.build.outputs.bin-artifact }}
             path: ./bin/
             merge-multiple: true
-        - name: Create tarball of bin
-          run: tar -czf compiled-binary_${{ needs.create-release.outputs.version }}.tar.gz -C ./bin .
         - name: Upload binary tarball
           uses: actions/upload-release-asset@v1
           env:
             GITHUB_TOKEN: ${{ github.token }}
           with:
             upload_url: ${{ needs.create-release.outputs.upload_url }}
-            asset_path: ./compiled-binary_${{ needs.create-release.outputs.version }}.tar.gz
+            asset_path: ./bin
             asset_name: ${{ github.event.repository.name }}_${{ needs.create-release.outputs.version }}.tar.gz
             asset_content_type: application/gzip
