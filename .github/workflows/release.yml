@@ -45,6 +45,7 @@ jobs:
           with:
             artifact-ids: ${{ needs.build.outputs.deb-artifact }}
             path: ./deb/
+            merge-multiple: true
         - name: upload linux artifact
           uses: actions/upload-release-asset@v1
           env:
@@ -60,6 +61,7 @@ jobs:
           with:
             artifact-ids: ${{ needs.build.outputs.rpm-artifact }}
             path: ./rpm/
+            merge-multiple: true
         - name: Upload RPM release asset
           uses: actions/upload-release-asset@v1
           env:
@@ -75,6 +77,7 @@ jobs:
           with:
             artifact-ids: ${{ needs.build.outputs.bin-artifact }}
             path: ./bin/
+            merge-multiple: true
         - name: Create tarball of bin
           run: tar -czf compiled-binary_${{ needs.create-release.outputs.version }}.tar.gz -C ./bin .
         - name: Upload binary tarball
