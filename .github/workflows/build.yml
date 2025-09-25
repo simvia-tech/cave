@@ -32,6 +32,25 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v5
 
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache cargo target
+        uses: actions/cache@v4
+        with:
+          path: target/
+          key: ${{ runner.os }}-cargo-target-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-target-
+
       - name: Install system dependencies
         run: apt-get update && apt-get install -y protobuf-compiler musl musl-dev musl-tools pkg-config
 
@@ -48,8 +67,19 @@ jobs:
           name: ${{ inputs.artifact-name }}compiled-binary
           path: target/x86_64-unknown-linux-musl/release/cave
 
+      - name: Cache cargo tools
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/
+          key: ${{ runner.os }}-cargo-tools-${{ hashFiles('**/Cargo.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-tools-
+
       - name: Install cargo packaging tools
-        run: cargo install cargo-deb cargo-generate-rpm
+        run: |
+          if ! command -v cargo-deb &> /dev/null || ! command -v cargo-generate-rpm &> /dev/null; then
+            cargo install cargo-deb cargo-generate-rpm
+          fi
 
       - name: Build Debian package
         run: cargo deb --target x86_64-unknown-linux-musl
