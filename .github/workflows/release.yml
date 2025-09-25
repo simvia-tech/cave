@@ -1,0 +1,80 @@
+name: create release
+on:
+  workflow_call:
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0          # fetch all history + tags
+        - name: Get latest tag
+          id: version
+          run: |
+            # Use git to find the most recent reachable tag
+            latest_tag=$(git describe --tags --abbrev=0)
+            echo "last_tag=$latest_tag" >> $GITHUB_OUTPUT
+        - name: release
+          uses: actions/create-release@v1
+          id: create_release
+          with:
+            draft: true
+            prerelease: false
+            release_name: Release ${{ steps.version.outputs.version }}
+            tag_name: ${{ github.ref }}
+          env:
+            GITHUB_TOKEN: ${{ github.token }}
+  upload-artifacts:
+    runs-on: ubuntu-latest
+    needs: create-release         
+    steps:
+        - name: Download package
+          uses: actions/download-artifact@v4
+          with:
+            name: deb-package
+            path: ./deb/
+        - name: upload linux artifact
+          uses: actions/upload-release-asset@v1
+          env:
+            GITHUB_TOKEN: ${{ github.token }}
+          with:
+            upload_url: ${{ needs.create-release.outputs.upload_url }}
+            asset_path: ./deb/*.deb
+            asset_name: ${{ github.event.repository.name }}_${{ needs.create-release.outputs.version }}.deb
+            asset_content_type: application/vnd.debian.binary-package
+        
+        - name: Download RPM package
+          uses: actions/download-artifact@v4
+          with:
+            name: rpm-package
+            path: ./rpm/
+        - name: Upload RPM release asset
+          uses: actions/upload-release-asset@v1
+          env:
+            GITHUB_TOKEN: ${{ github.token }}
+          with:
+            upload_url: ${{ needs.create-release.outputs.upload_url }}
+            asset_path: ./rpm/*.rpm
+            asset_name: ${{ github.event.repository.name }}_${{ needs.create-release.outputs.version }}.rpm
+            asset_content_type: application/x-rpm
+
+        - name: Download binary
+          uses: actions/download-artifact@v4
+          with:
+            name: compiled-binary
+            path: ./bin/
+        - name: Create tarball of bin
+          run: tar -czf compiled-binary_${{ needs.create-release.outputs.version }}.tar.gz -C ./bin .
+        - name: Upload binary tarball
+          uses: actions/upload-release-asset@v1
+          env:
+            GITHUB_TOKEN: ${{ github.token }}
+          with:
+            upload_url: ${{ needs.create-release.outputs.upload_url }}
+            asset_path: ./compiled-binary_${{ needs.create-release.outputs.version }}.tar.gz
+            asset_name: ${{ github.event.repository.name }}_${{ needs.create-release.outputs.version }}.tar.gz
+            asset_content_type: application/gzip
