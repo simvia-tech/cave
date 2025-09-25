@@ -3,7 +3,7 @@ run-name: Build all the binaries and distributions
 on: [push]
 jobs:
   build-debian-binary:
-    runs-on: debian-latest
+    runs-on: ubuntu-latest
     container:
       image: rust:bullseye
     steps:
