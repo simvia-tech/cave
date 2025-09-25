@@ -15,6 +15,7 @@ jobs:
         with:
           artifact-ids: ${{ inputs.artifact-id }}
           path: ./deb/
+          merge-multiple: true
       - name: install package
         run: |
           sudo dpkg -i ./deb/*.deb
