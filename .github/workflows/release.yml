@@ -1,0 +1,109 @@
+name: create release
+on:
+  pull_request:
+    branches: [main]
+    types: [closed]
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+    if: github.event.pull_request.merged == true 
+    with:
+      artifact-name: release
+  create-release:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true 
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+        - name: Get latest tag
+          id: version
+          run: |
+            sudo apt-get update -y
+            sudo apt-get install -y wget
+
+            wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+            chmod +x /usr/local/bin/yq
+        
+            VERSION=$(yq eval '.package.version' Cargo.toml)
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+        - name: release
+          uses: actions/create-release@v1
+          id: create_release
+          with:
+            draft: true
+            body_path: CHANGELOG.md
+            prerelease: false
+            release_name: Release ${{ steps.version.outputs.version }}
+            tag_name: ${{ github.ref }}
+          env:
+            GITHUB_TOKEN: ${{ github.token }}
+  upload-artifacts:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true 
+    needs: [create-release,build]         
+    steps:
+        - name: Download package
+          uses: actions/download-artifact@v4
+          with:
+            artifact-ids: ${{ needs.build.outputs.deb-artifact }}
+            path: ./deb/
+            merge-multiple: true
+
+        - name: Find deb file
+          id: find-deb
+          run: echo "deb-file=$(find ./deb -name '*.deb' -type f | head -n1)" >> $GITHUB_OUTPUT
+
+        - name: upload linux artifact
+          uses: actions/upload-release-asset@v1
+          env:
+            GITHUB_TOKEN: ${{ github.token }}
+          with:
+            upload_url: ${{ needs.create-release.outputs.upload_url }}
+            asset_path: ${{ steps.find-deb.outputs.deb-file }}
+            asset_name: ${{ github.event.repository.name }}_${{ needs.create-release.outputs.version }}.deb
+            asset_content_type: application/vnd.debian.binary-package
+        
+        - name: Download RPM package
+          uses: actions/download-artifact@v4
+          with:
+            artifact-ids: ${{ needs.build.outputs.rpm-artifact }}
+            path: ./rpm/
+            merge-multiple: true
+
+        - name: Find RPM file
+          id: find-rpm
+          run: echo "rpm-file=$(find ./rpm -name '*.rpm' -type f | head -n1)" >> $GITHUB_OUTPUT
+
+        - name: Upload RPM release asset
+          uses: actions/upload-release-asset@v1
+          env:
+            GITHUB_TOKEN: ${{ github.token }}
+          with:
+            upload_url: ${{ needs.create-release.outputs.upload_url }}
+            asset_path: ${{ steps.find-rpm.outputs.rpm-file }}
+            asset_name: ${{ github.event.repository.name }}_${{ needs.create-release.outputs.version }}.rpm
+            asset_content_type: application/x-rpm
+
+        - name: Download binary
+          uses: actions/download-artifact@v4
+          with:
+            artifact-ids: ${{ needs.build.outputs.bin-artifact }}
+            path: ./bin/
+            merge-multiple: true
+
+        - name: Create binary tarball
+          run: tar -czf ${{ github.event.repository.name }}_${{ needs.create-release.outputs.version }}.tar.gz -C ./bin .
+
+        - name: Upload binary tarball
+          uses: actions/upload-release-asset@v1
+          env:
+            GITHUB_TOKEN: ${{ github.token }}
+          with:
+            upload_url: ${{ needs.create-release.outputs.upload_url }}
+            asset_path: ./${{ github.event.repository.name }}_${{ needs.create-release.outputs.version }}.tar.gz
+            asset_name: ${{ github.event.repository.name }}_${{ needs.create-release.outputs.version }}.tar.gz
+            asset_content_type: application/gzip

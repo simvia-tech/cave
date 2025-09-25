@@ -1,0 +1,27 @@
+name: End to End tests
+on:
+  workflow_call:
+    inputs:
+      artifact-id:
+        required: true
+        type: string
+jobs:
+  run-e2e-tests:
+    runs-on: ubuntu-22.04
+    steps:
+      - run: docker info
+      - name: Download package
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ inputs.artifact-id }}
+          path: ./deb/
+          merge-multiple: true
+      - name: install package
+        run: |
+          sudo dpkg -i ./deb/*.deb || true
+          sudo apt-get update
+          sudo apt-get -f install -y
+      - name: display cave help
+        run: cave help
+      - name: display all cave versions
+        run: cave available
