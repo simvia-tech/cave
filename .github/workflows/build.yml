@@ -1,5 +1,4 @@
 name: Builds
-run-name: Build all the binaries and distributions
 on: [push]
 jobs:
   build-binary-and-package:

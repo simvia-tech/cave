@@ -1,0 +1,21 @@
+name: End to End tests
+on: [push]
+jobs:
+  run-e2e-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker info
+      - name: Download package
+        uses: actions/download-artifact@v4
+        with:
+          name: deb-package
+          path: ./
+      - name: install package
+        run: |
+          sudo dpkg -i target/debian/cave*
+          sudo apt-get update
+          sudo apt-get -f install -y
+      - name: display cave help
+        run: cave help
+      - name: display all cave versions
+        run: cave available
