@@ -1,18 +1,15 @@
 name: create release
 on:
-  pull_request:
+  push:
     branches: [main]
-    types: [closed]
 
 jobs:
   build:
     uses: ./.github/workflows/build.yml
-    if: github.event.pull_request.merged == true 
     with:
       artifact-name: release
   create-release:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true 
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
       version: ${{ steps.version.outputs.version }}
@@ -43,7 +40,6 @@ jobs:
             GITHUB_TOKEN: ${{ github.token }}
   upload-artifacts:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true 
     needs: [create-release,build]         
     steps:
         - name: Download package
