@@ -19,9 +19,12 @@ jobs:
         - name: Get latest tag
           id: version
           run: |
-            # Use git to find the most recent reachable tag
-            latest_tag=$(git describe --tags --abbrev=0)
-            echo "last_tag=$latest_tag" >> $GITHUB_OUTPUT
+            apt update && apt install -y wget
+            wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+            chmod +x /usr/local/bin/yq
+        
+            VERSION=$(yq eval '.package.version' Cargo.toml)
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
         - name: release
           uses: actions/create-release@v1
           id: create_release
