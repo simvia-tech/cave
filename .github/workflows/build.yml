@@ -8,6 +8,16 @@ on:
         description: Base name for uploaded artifacts
         required: true
         type: string
+    outputs:
+      deb-artifact:
+        description: "Debian package artifact ID"
+        value: ${{ jobs.build-binary-and-package.outputs.deb-artifact }}
+      rpm-artifact:
+        description: "RPM package artifact ID"
+        value: ${{ jobs.build-binary-and-package.outputs.rpm-artifact }}
+      bin-artifact:
+        description: "Binary artifact ID"
+        value: ${{ jobs.build-binary-and-package.outputs.bin-artifact }}
 
 jobs:
   build-binary-and-package:
