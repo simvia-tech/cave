@@ -1,4 +1,4 @@
-name: "Build and deploy Github pages"
+name: "Build doc and deploy to Github pages"
 
 on:
   push:

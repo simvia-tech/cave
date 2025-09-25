@@ -2,7 +2,7 @@ name: Builds
 run-name: Build all the binaries and distributions
 on: [push]
 jobs:
-  build-debian-binary:
+  build-binary-and-package:
     runs-on: ubuntu-latest
     container:
       image: rust:bullseye
@@ -11,9 +11,24 @@ jobs:
         uses: actions/checkout@v5
       - run: apt update && apt install protobuf-compiler -y
       - run: cargo build --release
-      # Upload the compiled binary as an artifact
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
           name: compiled-binary
           path: target/release/* 
+      - name: intall cargo dependencies
+        run: cargo install cargo-deb cargo-generate-rpm
+      - name: build debian packages
+        run: cargo deb
+      - name: build rpm packages
+        run: cargo generate-rpm
+      - name: Upload deb_package
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb-package
+          path: target/debian/*
+      - name: Upload rpm_package
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpm-package
+          path: target/generate-rpm/*

@@ -1,7 +1,7 @@
 [package]
 name = "cave"
 version = "0.1.0"
-authors = ["Simvia <hadrien.riols@simvia.tech>"]
+authors = ["Simvia <basile.marchand@simvia.tech>"]
 edition = "2021"
 description = "CLI for managing code_aster versions"
 license = "MIT"
@@ -39,7 +39,6 @@ assets = [
     ["target/release/cave", "usr/bin/", "755"],
     ["man/cave.1", "usr/share/man/man1/", "644"]
 ]
-depends = ["protobuf-compiler"]
 
 [package.metadata.generate-rpm]
 assets = [
