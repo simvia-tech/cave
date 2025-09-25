@@ -6,13 +6,12 @@ on:
     types: [opened, reopened, synchronize, edited]
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: ./.github/workflows/build.yml
-        id: build
-        with:
-          artifact-name: pr
-      - uses: ./.github/workflows/e2e.yml
-        with:
-          artifact-id: ${{ steps.build.outputs.deb-artifact }}
+  build:
+    uses: ./.github/workflows/build.yml
+    with:
+      artifact-name: release
+  test:
+    uses: ./.github/workflows/e2e.yml
+    needs: [build]
+    with:
+      artifact-id: ${{ needs.build.outputs.deb-artifact }}
