@@ -33,27 +33,30 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Install system dependencies
-        run: apt-get update && apt-get install -y protobuf-compiler
+        run: apt-get update && apt-get install -y protobuf-compiler musl musl-dev musl-tools pkg-config
+
+      - name: Install rustup depencencies
+        run: rustup target add x86_64-unknown-linux-musl
 
       - name: Build release binary
-        run: cargo build --release
+        run: cargo build --release --target x86_64-unknown-linux-musl
 
       - name: Upload compiled binary
         uses: actions/upload-artifact@v4
         id: upload-bin
         with:
           name: ${{ inputs.artifact-name }}compiled-binary
-          path: target/release/*
+          path: target/x86_64-unknown-linux-musl/release/cave
 
       - name: Install cargo packaging tools
         run: cargo install cargo-deb cargo-generate-rpm
 
       - name: Build Debian package
-        run: cargo deb
+        run: cargo deb --target x86_64-unknown-linux-musl
         continue-on-error: true   # optional
 
       - name: Build RPM package
-        run: cargo generate-rpm
+        run: cargo generate-rpm --target x86_64-unknown-linux-musl
         continue-on-error: true   # optional
 
       - name: Upload Debian package
@@ -61,11 +64,11 @@ jobs:
         id: upload-deb
         with:
           name: ${{ inputs.artifact-name }}deb-package
-          path: target/debian/*
+          path: target/x86_64-unknown-linux-musl/debian/*
 
       - name: Upload RPM package
         uses: actions/upload-artifact@v4
         id: upload-rpm   
         with:
           name: ${{ inputs.artifact-name }}rpm-package
-          path: target/generate-rpm/*
+          path: target/x86_64-unknown-linux-musl/generate-rpm/*
