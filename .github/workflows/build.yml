@@ -9,7 +9,6 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v5
-      - run: cd ${{ github.workspace }}
       - run: apt update && apt install protobuf-compiler -y
       - run: cargo build --release
       # Upload the compiled binary as an artifact
