@@ -28,13 +28,15 @@ jobs:
             toolchain: stable
             override: true
       - name: build doc
-        run: cargo doc
+        run: cargo doc --no-deps --release
+      - name: add index file
+        run: cp assets/index.html target/doc/index.html
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './target/doc/cave/'
+          path: './target/doc/'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
