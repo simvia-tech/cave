@@ -46,13 +46,18 @@ jobs:
             artifact-ids: ${{ needs.build.outputs.deb-artifact }}
             path: ./deb/
             merge-multiple: true
+
+        - name: Find deb file
+          id: find-deb
+          run: echo "deb-file=$(find ./deb -name '*.deb' -type f | head -n1)" >> $GITHUB_OUTPUT
+
         - name: upload linux artifact
           uses: actions/upload-release-asset@v1
           env:
             GITHUB_TOKEN: ${{ github.token }}
           with:
             upload_url: ${{ needs.create-release.outputs.upload_url }}
-            asset_path: ./deb
+            asset_path: ${{ steps.find-deb.outputs.deb-file }}
             asset_name: ${{ github.event.repository.name }}_${{ needs.create-release.outputs.version }}.deb
             asset_content_type: application/vnd.debian.binary-package
         
@@ -62,13 +67,18 @@ jobs:
             artifact-ids: ${{ needs.build.outputs.rpm-artifact }}
             path: ./rpm/
             merge-multiple: true
+
+        - name: Find RPM file
+          id: find-rpm
+          run: echo "rpm-file=$(find ./rpm -name '*.rpm' -type f | head -n1)" >> $GITHUB_OUTPUT
+
         - name: Upload RPM release asset
           uses: actions/upload-release-asset@v1
           env:
             GITHUB_TOKEN: ${{ github.token }}
           with:
             upload_url: ${{ needs.create-release.outputs.upload_url }}
-            asset_path: ./rpm
+            asset_path: ${{ steps.find-rpm.outputs.rpm-file }}
             asset_name: ${{ github.event.repository.name }}_${{ needs.create-release.outputs.version }}.rpm
             asset_content_type: application/x-rpm
 
@@ -78,12 +88,16 @@ jobs:
             artifact-ids: ${{ needs.build.outputs.bin-artifact }}
             path: ./bin/
             merge-multiple: true
+
+        - name: Create binary tarball
+          run: tar -czf ${{ github.event.repository.name }}_${{ needs.create-release.outputs.version }}.tar.gz -C ./bin .
+
         - name: Upload binary tarball
           uses: actions/upload-release-asset@v1
           env:
             GITHUB_TOKEN: ${{ github.token }}
           with:
             upload_url: ${{ needs.create-release.outputs.upload_url }}
-            asset_path: ./bin
+            asset_path: ./${{ github.event.repository.name }}_${{ needs.create-release.outputs.version }}.tar.gz
             asset_name: ${{ github.event.repository.name }}_${{ needs.create-release.outputs.version }}.tar.gz
             asset_content_type: application/gzip
