@@ -1,0 +1,210 @@
+.TH cave 1 "July 2025" "cave 0.1.0" "code_aster Version Manager"
+
+.SH NAME
+cave \- Manage multiple code_aster versions via Docker with ease
+
+.SH SYNOPSIS
+\fBcave\fR [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] <\fIsubcommand\fR> [\fIoptions\fR]
+
+.SH DESCRIPTION
+\fBcave\fR is a command-line tool designed to simplify the use of multiple versions of the code_aster finite element solver. It leverages Docker images provided on Docker Hub to allow seamless switching between solver versions, reproducibility across projects, and automation of simulation tasks.
+
+\fBcave\fR is especially useful in environments where reproducibility and version control of simulation tools are essential.
+
+.SH GLOBAL OPTIONS
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Display this help message and exit.
+
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Print the current version of the `cave` binary.
+
+.SH SUBCOMMANDS
+
+.SS use
+\fBcave use <version>\fR
+
+Set a global (system-wide) default version of code_aster to use in all projects (unless a directory-specific version is pinned). The version should be equal to stable, testing or in the format \fIMAJOR.MINOR.PATCH\fR (e.g. 17.2.24). This sets a persistent preference at the roots in a `.cave` file
+
+Example:
+.IP
+\fBcave use 17.3.1\fR
+
+This makes version 17.3.1 the default for all future `cave run` commands in folders without a pinned version.
+
+.SS pin
+\fBcave pin <version>\fR
+
+Pin a specific version of code_aster to the current working directory. The version should be equal to stable, testing or in the format \fIMAJOR.MINOR.PATCH\fR (e.g. 17.2.24). This overrides the global version and is stored in a local `.cave` file. It's ideal for reproducible simulations per project.
+
+Example:
+.IP
+\fBcave pin testing\fR
+
+After pinning, all runs in this folder will use the testing version (see enable_auto_update for more details).
+
+.SS run
+\fBcave run <file.export>\fR
+
+Launch a simulation using the `.export` file with the code_aster version determined by pinning (or global config fallback). Arguments passed to code_aster must follow a `--` separator after `run`, as expected by the code_aster command line interface.
+
+Example:
+.IP
+\fBcave run -- calcul.export\fR
+.br
+\fBcave run -- -i\fR
+
+Notes:
+- You must pass a valid `.export` file.
+- Docker must be installed and running.
+- Simulation output is streamed in real time.
+
+.SS list
+\fBcave list\fR
+
+Display a list of code_aster versions that are already downloaded locally (i.e. available Docker images).
+
+.SS available
+\fBcave available\fR
+
+Query Docker Hub to display all officially published code_aster versions. It shows all the available versions, those downloaded are in blue. Two tags shows you the code_aster \fBstable\fR and \fBtesting\fR versions.
+
+.SS config
+\fBcave config\fR <option>
+
+Manage persistent configuration options that affect how \fBcave\fR behaves globally across sessions and projects. These options are stored in the configuration file at:
+
+\fB~/.caveconfig\fR
+
+Available options:
+
+.TP
+\fBenable-auto-update\fR
+Enable automatic checks for newer code_aster versions when executing \fBcave run\fR with a testing or stable version pinned. When enabled, \fBcave\fR will attempt to fetch the latest stable/testing version from Docker Hub.
+
+Usage:
+.IP
+\fBcave config enable-auto-update\fR
+
+.TP
+\fBdisable-auto-update\fR
+Disable automatic version checks. Useful when working offline or to reduce network usage.
+
+Usage:
+.IP
+\fBcave config disable-auto-update\fR
+
+Default behavior is not to have auto-update \fBenabled\fR.
+
+.TP
+\fBset-registry <REPO> <USER> <TOKEN>\fR
+Define a personal registry where Docker images of code_aster can be fetched. 
+You must provide the repository URL, your username, and a valid token.
+
+Usage:
+.IP
+\fBcave config set-registry myregistry.example.com myuser mytoken\fR
+
+.TP
+\fBerase-registry\fR
+Erase the personal registry configuration previously set by \fBset-registry\fR.
+
+Usage:
+.IP
+\fBcave config erase-registry\fR
+
+.TP
+\fBenable-usage-tracking\fR
+Enable tracking of code_aster version usage. This allows \fBcave\fR to collect anonymized usage data. This option is enabled by default.
+
+Usage:
+.IP
+\fBcave config enable-usage-tracking\fR
+
+.TP
+\fBdisable-usage-tracking\fR
+Disable tracking of code_aster version usage. No usage data will be sent.
+
+Usage:
+.IP
+\fBcave config disable-usage-tracking\fR
+
+.PP
+\fBNote:\fR These settings affect all projects.x
+
+.SS help
+\fBcave\fR [<subcommand>] \fBhelp\fR
+
+.SH INSTALLATION
+
+To install the \fBcave\fR binary manually, follow the steps below.
+
+.SS Binary installation
+
+Download the latest release of the \fBcave\fR binary from the official website or distribution platform.
+
+Then, open a terminal and run:
+
+.IP
+.nf
+cd ~
+mkdir -p .cave_cmd/bin
+cp /path/to/downloaded/cave ~/.cave_cmd/bin
+echo 'export PATH="$HOME/.cave_cmd/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+.fi
+
+This will add \fBcave\fR to your PATH so that you can use it from any terminal session.
+
+If you use \fBzsh\fR or another shell, replace \fB.bashrc\fR with the appropriate configuration file (e.g. \fB.zshrc\fR).
+
+.SS Shell completion
+
+For \fBzsh\fR users, completion can be enabled by sourcing the generated script directly from your shell configuration.
+
+After downloading or compiling \fBcave\fR, the completion script is typically available at:
+
+.IP
+\fB<path-to>/target/debug/build/cave-*/out/completions/_cave\fR
+
+To enable completion, add the following line to your \fB~/.zshrc\fR:
+
+.IP
+.nf
+source /full/path/to/_cave
+.fi
+
+Then restart your shell or run:
+.IP
+.nf
+source ~/.zshrc
+.fi
+
+This avoids the need for administrator privileges and keeps the configuration local to your user.
+After setup, typing \fBcave <TAB>\fR will suggest available subcommands and arguments.
+
+.SH CONFIGURATION FILES
+.TP
+\fB~/.caveconfig.json\fR
+User-level configuration 
+
+.TP
+\fB./.cave\fR
+Project-level pinned version (local override)
+
+.SH ENVIRONMENT REQUIREMENTS
+- Docker Engine installed and running
+- Internet access for pulling remote images
+- A valid `.export` file for simulations
+
+.SH AUTHOR
+Developed by Simvia.
+
+.SH SEE ALSO
+code_aster: https://www.code-aster.org
+.br
+Docker: https://www.docker.com
+
+.SH VERSION
+1.0.0
