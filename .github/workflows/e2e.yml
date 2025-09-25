@@ -13,11 +13,11 @@ jobs:
       - name: Download package
         uses: actions/download-artifact@v4
         with:
-          artifact-id: ${{ inputs.artifact-id }}
-          path: ./
+          artifact-ids: ${{ inputs.artifact-id }}
+          path: ./deb/
       - name: install package
         run: |
-          sudo dpkg -i target/debian/cave*
+          sudo dpkg -i ./deb/*.deb
           sudo apt-get update
           sudo apt-get -f install -y
       - name: display cave help

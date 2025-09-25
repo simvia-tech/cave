@@ -42,7 +42,7 @@ jobs:
         - name: Download package
           uses: actions/download-artifact@v4
           with:
-            artifact-id: ${{ needs.build.outputs.deb-artifact }}
+            artifact-ids: ${{ needs.build.outputs.deb-artifact }}
             path: ./deb/
         - name: upload linux artifact
           uses: actions/upload-release-asset@v1
@@ -57,7 +57,7 @@ jobs:
         - name: Download RPM package
           uses: actions/download-artifact@v4
           with:
-            artifact-id: ${{ needs.build.outputs.rpm-artifact }}
+            artifact-ids: ${{ needs.build.outputs.rpm-artifact }}
             path: ./rpm/
         - name: Upload RPM release asset
           uses: actions/upload-release-asset@v1
@@ -72,7 +72,7 @@ jobs:
         - name: Download binary
           uses: actions/download-artifact@v4
           with:
-            artifact-id: ${{ needs.build.outputs.bin-artifact }}
+            artifact-ids: ${{ needs.build.outputs.bin-artifact }}
             path: ./bin/
         - name: Create tarball of bin
           run: tar -czf compiled-binary_${{ needs.create-release.outputs.version }}.tar.gz -C ./bin .
