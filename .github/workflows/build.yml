@@ -1,0 +1,20 @@
+name: Builds
+run-name: Build all the binaries and distributions
+on: [push]
+jobs:
+  build-debian-binary:
+    runs-on: debian-latest
+    container:
+      image: rust:bullseye
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v5
+      - run: cd ${{ github.workspace }}
+      - run: apt update && apt install protobuf-compiler -y
+      - run: cargo build --release
+      # Upload the compiled binary as an artifact
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-binary
+          path: target/release/* 

@@ -1,0 +1,7 @@
+name: unitests
+on: [push]
+jobs:
+  run-cargo-unitests:
+    runs-on: ubuntu-latest
+    steps:
+      - run: docker info
