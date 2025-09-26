@@ -20,6 +20,24 @@ use cli::{Cli, Command, ConfigAction};
 use manage::*;
 use config::*;
 use std::process;
+use std::env;
+use log::LevelFilter;
+use log::debug;
+use env_logger::Builder;
+
+fn init_logging() {
+    let debug_enabled = env::var("CAVE_DEBUG").map(|v| v == "true").unwrap_or(false);
+
+    let mut builder = Builder::new();
+    if debug_enabled {
+        builder.filter_level(LevelFilter::Debug);
+    } else {
+        builder.filter_level(LevelFilter::Info);
+    }
+
+    builder.init();
+}
+
 
 /// Entry point for the `cave` CLI binary.
 ///
@@ -33,6 +51,8 @@ use std::process;
 /// Returns any [`io::Error`] if CLI parsing, config reading, or underlying commands fail.
 /// Errors from subcommands are printed and cause an exit with code `1`.
 fn main() -> io::Result<()> {
+    init_logging();
+    debug!("Mode debug activé");
     let args = Cli::parse();
     let _ = match read_config() {
         Ok(cfg) => cfg,

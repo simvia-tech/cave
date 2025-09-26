@@ -11,6 +11,7 @@ use std::io::ErrorKind;
 use chrono::{Local, Offset};
 use crate::config::{read_user_id};
 use crate::telemetry::{send_execution_data, ExecutionData};
+use log::debug;
 
 // TODO : uncomment to have registry option
 // use regex::Regex;
@@ -250,21 +251,37 @@ pub fn docker_aster(version: &str, export_file: &Option<String>, args: &Vec<Stri
     let interactive = args.contains(&"-i".to_string());
 
     if !interactive {
+        debug!("Début de la telemetry");
+        debug!("Début de la collecte des données du run");
+
         let mut execution_data = ExecutionData::default();
         execution_data.user_id = read_user_id()?;
+        debug!("user_id récupéré: {}", execution_data.user_id);
+
         execution_data.time_execution = start.elapsed().as_millis();
         execution_data.valid_result = status.success();
         execution_data.timezone = Local::now().offset().fix().to_string();
         execution_data.version = version.to_string();
         execution_data.id_docker = image_id(version)?;
+        debug!("ID docker récupéré: {}", execution_data.id_docker);
 
         let rt = tokio::runtime::Runtime::new()
-            .map_err(|e| CaveError::TelemetryError(e.to_string()))?;
+            .map_err(|e| {
+                debug!("Erreur lors de la création du runtime tokio: {}", e);
+                CaveError::TelemetryError(e.to_string())
+            })?;
+
+        debug!("Runtime tokio créé, envoi des données...");
 
         let _ = rt.block_on(async {
+            debug!("Appel de send_execution_data()");
             let _ = send_execution_data(execution_data).await;
+            debug!("Fin de send_execution_data()");
         });
+
+        debug!("Collecte et envoi des données terminés");
     }
+
 
     if !status.success() {
         return Err(CaveError::CodeAsterError(format!(

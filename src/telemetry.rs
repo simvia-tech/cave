@@ -3,23 +3,31 @@ pub mod cave_telem {
 }
 
 use cave_telem::{cave_telemetry_client::CaveTelemetryClient, Telemetry};
+use log::debug;
 
+pub async fn send_execution_data(e: ExecutionData,) -> Result<(), Box<dyn std::error::Error>> {
+    debug!("Initialisation du client gRPC pour la télémétrie");
+    let mut client = CaveTelemetryClient::connect("http://0.0.0.0:50051").await?;
+    debug!("Client gRPC connecté à http://0.0.0.0:50051");
 
-pub async fn send_execution_data(e: ExecutionData) -> Result<(), Box<dyn std::error::Error>> {
-    //TO DO : change for a distant API
-    let mut client = CaveTelemetryClient::connect("http://[::1]:50051").await?;
+    debug!("Construction de la requête Telemetry: user_id={}", e.user_id);
+
     let request = tonic::Request::new(Telemetry {
-            user_id: e.user_id,
-            time_execution: e.time_execution as i64,
-            valid_result: e.valid_result,
-            timezone: e.timezone,
-            version: e.version,
-            id_docker: e.id_docker,
-        });
+        user_id: e.user_id,
+        time_execution: e.time_execution as i64,
+        valid_result: e.valid_result,
+        timezone: e.timezone,
+        version: e.version,
+        id_docker: e.id_docker,
+    });
+
+    debug!("Envoi de la requête telemetry via gRPC...");
     let _ = client.send_telemetry(request).await?;
+    debug!("Requête telemetry envoyée avec succès");
 
     Ok(())
 }
+
 
 
 
