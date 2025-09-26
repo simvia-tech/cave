@@ -30,7 +30,6 @@
 - `cave available` – list images on DockerHub
 - `cave config` – configure Cave
 - `cave use` / `cave pin` – manage versions
-- Full autocompletion for Bash/Zsh
 - Man page available
 
 ---
@@ -84,34 +83,9 @@ cave --help
 man cave
 ```
 
-### Shell Completion
-
-For `zsh` users, you can enable auto-completion as follows:
-
-- Download the appropriate auto-completion script for your distribution from [URL to be provided].
-- Add the following line to your shell configuration file (e.g., `~/.bashrc`):
-
-```bash
-source /full/path/to/<auto-completion-script>
-```
-
-- Restart your shell or run:
-
-```bash
-source ~/.bashrc
-```
-
-This setup does not require administrator privileges and keeps the configuration local to your user. After setup, typing `cave <TAB>` will suggest available subcommands and arguments.
-
-### Configuration Files
-
-- `~/.caveconfig`: User-level configuration file
-- `./.cave`: Project-level pinned version configuration (local override)
-
-
 ## Usage
 
-For detailed user documentation, please visit our [User Documentation](https://github.com/yourusername/yourrepo).
+For detailed user documentation, please visit our [User Documentation](https://github.com/simvia-tech/cave/blob/dev/docs/man.md).
 
 ## Telemetry 
 
