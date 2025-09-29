@@ -62,6 +62,26 @@ cargo test
 ```
 
 ---
+
+## Variables d'environnement
+
+Le CLI supporte deux variables d'environnement optionnelles :
+
+1. `CAVE_DEBUG=true`  
+   - Active l'affichage des traces en mode debug du CLI. Utile pour suivre les opérations internes et déboguer des problèmes.
+
+2. `LOCAL_TELEMETRY=true`  
+   - Force l'envoi de la télémétrie vers un serveur local sur un port personnalisé, au lieu du serveur distant par défaut Simvia.  
+   - Utile pour tester la télémétrie en local sans impacter la production.
+
+Pour les utiliser, exportez simplement les variables avant de lancer le CLI, par exemple :
+
+```bash
+export CAVE_DEBUG=true
+export LOCAL_TELEMETRY=true
+cave your-command
+```
+
 ## Structure du projet
 
 - `src/main.rs` → point d’entrée CLI  
