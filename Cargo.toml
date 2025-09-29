@@ -20,9 +20,11 @@ colored = "2.0"
 chrono = "0.4"
 chrono-tz = "0.8"
 uuid = { version = "1", features = ["v4"] }
-tonic = "0.10"
+tonic = { version = "0.10", features = ["tls", "tls-roots"] }
 prost = "0.12"
 tokio = { version = "1", features = ["full"] }
+log = "0.4.28"
+env_logger = "0.11.8"
 
 [build-dependencies]
 clap = { version = "4.5.21", features = ["derive"] }

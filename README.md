@@ -1,27 +1,14 @@
-<table width="100%">
-  <tr>
-    <td align="left" valign="middle" style="font-size: 2em; font-weight: bold;">
-      Cave CLI
-    </td>
-    <td align="right" valign="middle" style="width: 150px;">
-      <img src="assets/logo-simvia.svg" alt="Simvia Logo" width="120" />
-    </td>
-  </tr>
-</table>
+<p align="center"><img src="assets/logo-simvia.svg" alt="Simvia Logo" width="50%" /></p>
 
+<p align="center">
+  <a href="https://github.com/simvia/cave/releases"><img src="https://img.shields.io/badge/version-0.1.0-blue" alt="Version" /></a>
+  <a href="https://github.com/simvia-tech/cave/actions/workflows/pr.yml"><img src="https://github.com/simvia-tech/cave/actions/workflows/pr.yml/badge.svg" alt="CI-CD" /></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License" /></a>
+</p>
 
-[![Version](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/simvia/cave/releases)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+# CAVE CLI
 
-> CLI tool to manage code_aster versions.
-
----
-<!-- 
-## 🎬 Demo
-
-![Cave CLI demo](assets/cave.gif)
-
---- -->
+CAVE is a CLI tool that leverages Docker to conveniently manage multiple code_aster versions on your local environment, thanks to [Simvia](https://simvia.tech)'s [code_aster docker images](https://hub.docker.com/r/simvia/code_aster) .
 
 ## ⚡ Features
 
@@ -30,88 +17,52 @@
 - `cave available` – list images on DockerHub
 - `cave config` – configure Cave
 - `cave use` / `cave pin` – manage versions
-- Full autocompletion for Bash/Zsh
 - Man page available
-
----
 
 ## 🛠 Installation
 
-### Prerequisites
+> This software require to first having installed docker.
 
-You need to install the Protocol Buffers compiler (`protoc`) to build this project from source:
+### Installation with linux packages
+
+#### Debian based
+
+Fetch the [latest release](https://github.com/simvia-tech/cave/releases) .deb file, then run :
 
 ```bash
-sudo apt-get install protobuf-compiler
+sudo dpkg -i cave_version.deb
 ```
 
-### Binary Package Installation
-
-You can install cave via the prebuilt .deb (Debian/Ubuntu) or .rpm (Fedora/CentOS/RHEL) package. This method automatically configures the PATH and installs the man page.
-
-#### Debian / Ubuntu (.deb)
-
-1. Download the latest .deb from the official release page.
-
-2. Install it using apt to automatically resolve dependencies:
-```bash
-sudo dpkg -i cave_0.1.0-1_amd64.deb
-```
-cave binary will be installed in /usr/bin/cave.
-
-Verify installation:
-```bash
-cave --version
-cave --help
-man cave
-```
 #### RedHat / Fedora (.rpm)
 
-1. Download the latest .rpm from the official release page.
-
-2. Install it using dnf or yum:
+Fetch the [latest release](https://github.com/simvia-tech/cave/releases) .rpm file, then run :
 
 ```bash
-sudo dnf install cave-1.0.0-1.x86_64.rpm
+sudo dnf install cave_version.rpm
 # or for older systems
-sudo yum install cave-1.0.0-1.x86_64.rpm
+sudo yum install cave_version.rpm
 ```
 
-Verify installation:
+### Binary install
+
+Download the pre‑built tarball, extract the `cave` binary .tar.gz
+
+```bash
+tar -xzf ./cave_version.tar.gz -C /tmp
+sudo mv /tmp/cave /usr/local/bin/
+```
+
+### Verify installation:
+
 ```bash
 cave --version
 cave --help
 man cave
 ```
-
-### Shell Completion
-
-For `zsh` users, you can enable auto-completion as follows:
-
-- Download the appropriate auto-completion script for your distribution from [URL to be provided].
-- Add the following line to your shell configuration file (e.g., `~/.bashrc`):
-
-```bash
-source /full/path/to/<auto-completion-script>
-```
-
-- Restart your shell or run:
-
-```bash
-source ~/.bashrc
-```
-
-This setup does not require administrator privileges and keeps the configuration local to your user. After setup, typing `cave <TAB>` will suggest available subcommands and arguments.
-
-### Configuration Files
-
-- `~/.caveconfig`: User-level configuration file
-- `./.cave`: Project-level pinned version configuration (local override)
-
 
 ## Usage
 
-For detailed user documentation, please visit our [User Documentation](https://github.com/yourusername/yourrepo).
+For detailed user documentation, please visit our [User Documentation](https://github.com/simvia-tech/cave/blob/dev/docs/man.md).
 
 ## Telemetry 
 
@@ -132,8 +83,12 @@ Telemetry respects your privacy and does not collect sensitive information.
 - [Docker](https://www.docker.com)
 - [Simvia Docker Hub](https://hub.docker.com/r/simvia/code_aster)
 
-
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
+# Reach Us
+
+We love feedback.
+Don't hesitate to open a [Github issue](https://github.com/simvia-tech/cave/issues/new) or
+feel free to reach us on our website [https://simvia.tech/fr#contact](https://simvia.tech/fr#contact)
