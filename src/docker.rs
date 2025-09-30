@@ -12,6 +12,7 @@ use chrono::{Local, Offset};
 use crate::config::{read_user_id};
 use crate::telemetry::{send_execution_data, ExecutionData};
 use log::debug;
+use std::env;
 
 // TODO : uncomment to have registry option
 // use regex::Regex;
@@ -273,9 +274,10 @@ pub fn docker_aster(version: &str, export_file: &Option<String>, args: &Vec<Stri
 
         debug!("Runtime tokio créé, envoi des données...");
 
-        let _ = rt.block_on(async {
+        rt.block_on(async {
             debug!("Appel de send_execution_data()");
-            let _ = send_execution_data(execution_data).await;
+            let local_telemetry = env::var("LOCAL_TELEMETRY").map(|v| v == "true").unwrap_or(false);
+            let _ = send_execution_data(execution_data, local_telemetry).await;
             debug!("Fin de send_execution_data()");
         });
 

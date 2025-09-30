@@ -1,6 +1,6 @@
 [package]
 name = "cave"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Simvia <basile.marchand@simvia.tech>"]
 edition = "2021"
 description = "CLI for managing code_aster versions"
