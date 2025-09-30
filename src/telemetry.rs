@@ -16,8 +16,8 @@ pub async fn send_execution_data(e: ExecutionData, local: bool) -> Result<(), Bo
     if local {
         debug!("=== CONNEXION EN LOCAL ===");
         debug!("Initialisation du client gRPC");
-        client = CaveTelemetryClient::connect("http://0.0.0.0:50051").await?;
-        debug!("Client gRPC connecté à http://0.0.0.0:50051");
+        client = CaveTelemetryClient::connect("http://127.0.0.1:50051").await?;
+        debug!("Client gRPC connecté à http://127.0.0.1:50051");
     }
     else {
         debug!("=== CONNEXION A DISTANCE ===");
@@ -32,7 +32,7 @@ pub async fn send_execution_data(e: ExecutionData, local: bool) -> Result<(), Bo
         debug!("Configuration du canal TLS réussie");
 
         debug!("Établissement de la connexion...");
-        let connect_timeout = Duration::from_millis(0_500);
+        let connect_timeout = Duration::from_millis(1000);
         let channel  = match timeout(connect_timeout, endpoint.connect()).await {
             Ok(Ok(ch)) => {
                 debug!("Connexion TCP/TLS établie avec succès");
