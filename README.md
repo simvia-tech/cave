@@ -68,7 +68,7 @@ For detailed user documentation, please visit our [User Documentation](https://g
 
 `cave` includes optional telemetry features to help improve the tool by collecting anonymous usage data. You can control telemetry settings via the configuration commands.
 
-By default, version usage tracking is **enabled**, sending anonymous data about which code_aster versions you run. You can disable this tracking if you prefer.
+By default, version usage tracking is **enabled**, sending anonymous data (see [Telemetry](https://github.com/simvia-tech/cave/blob/dev/docs/telemetry.md)) about which code_aster versions you run. You can disable this tracking if you prefer.
 
 To deactivate telemetry, use:
 
@@ -77,11 +77,17 @@ cave config disable-usage-tracking
 ```
 Telemetry respects your privacy and does not collect sensitive information.
 
+## Contributors
+
+- Lucas S.
+- Basile M.
+- Hadrien R.
+
 ## See Also
 
-- [Code_Aster](https://www.code-aster.org)
-- [Docker](https://www.docker.com)
+- [code_aster](https://www.code-aster.org)
 - [Simvia Docker Hub](https://hub.docker.com/r/simvia/code_aster)
+- [code_aster catalog](https://simvia-tech.github.io/code-aster-dockerhub/)
 
 ## License
 

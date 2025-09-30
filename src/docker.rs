@@ -274,7 +274,7 @@ pub fn docker_aster(version: &str, export_file: &Option<String>, args: &Vec<Stri
 
         debug!("Runtime tokio créé, envoi des données...");
 
-        let _ = rt.block_on(async {
+        rt.block_on(async {
             debug!("Appel de send_execution_data()");
             let local_telemetry = env::var("LOCAL_TELEMETRY").map(|v| v == "true").unwrap_or(false);
             let _ = send_execution_data(execution_data, local_telemetry).await;

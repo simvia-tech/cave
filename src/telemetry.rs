@@ -2,6 +2,7 @@ pub mod cave_telem {
     tonic::include_proto!("cave_telem"); 
 }
 
+use tokio::time::{timeout, Duration};
 use cave_telem::{cave_telemetry_client::CaveTelemetryClient, Telemetry};
 use log::debug;
 use tonic::transport::{Channel, ClientTlsConfig};
@@ -31,14 +32,19 @@ pub async fn send_execution_data(e: ExecutionData, local: bool) -> Result<(), Bo
         debug!("Configuration du canal TLS réussie");
 
         debug!("Établissement de la connexion...");
-        let channel = match endpoint.connect().await {
-            Ok(ch) => {
+        let connect_timeout = Duration::from_millis(0_500);
+        let channel  = match timeout(connect_timeout, endpoint.connect()).await {
+            Ok(Ok(ch)) => {
                 debug!("Connexion TCP/TLS établie avec succès");
                 ch
             }
-            Err(e) => {
+            Ok(Err(e)) => {
                 debug!("Échec de la connexion TCP/TLS: {}", e);
                 debug!("Type d'erreur: {:?}", e);
+                return Err(e.into());
+            }
+            Err(e) => {
+                debug!("Timeout atteint lors de la connexion TCP/TLS");
                 return Err(e.into());
             }
         };
