@@ -1,89 +1,80 @@
-pub mod cave_telem {
-    tonic::include_proto!("cave_telem"); 
-}
-
-use tokio::time::{timeout, Duration};
-use cave_telem::{cave_telemetry_client::CaveTelemetryClient, Telemetry};
 use log::debug;
-use tonic::transport::{Channel, ClientTlsConfig};
+use serde::Serialize;
+use std::time::Duration;
+
+#[derive(Serialize)]
+struct TelemetryPayload {
+    user_id: String,
+    time_execution: i64,
+    valid_result: bool,
+    timezone: String,
+    version: String,
+    id_docker: String,
+    r#type: i32,
+}
 
 pub async fn send_execution_data(e: ExecutionData, local: bool) -> Result<(), Box<dyn std::error::Error>> {
     debug!("=== DÉBUT DE LA TÉLÉMÉTRIE ===");
-    debug!("Initialisation du client gRPC pour la télémétrie");
+    debug!("Initialisation du client HTTP pour la télémétrie");
     debug!("Données à envoyer: {:?}", e);
-    let mut client;
 
-    if local {
+    let endpoint = if local {
         debug!("=== CONNEXION EN LOCAL ===");
-        debug!("Initialisation du client gRPC");
-        client = CaveTelemetryClient::connect("http://127.0.0.1:50051").await?;
-        debug!("Client gRPC connecté à http://127.0.0.1:50051");
-    }
-    else {
+        "http://localhost:8080/"
+    } else {
         debug!("=== CONNEXION A DISTANCE ===");
-        debug!("Configuration TLS pour le domaine: code-insight.simvia-app.fr");
-        let tls = ClientTlsConfig::new()
-            .domain_name("code-insight.simvia-app.fr");
+        "https://7a98391a395292bd9f0f.lambda.simvia-app.fr"
+    };
 
-        debug!("Tentative de connexion à: https://code-insight.simvia-app.fr:8443");
-        let endpoint = Channel::from_static("https://code-insight.simvia-app.fr:8443")
-            .tls_config(tls)
-            .expect("Configuration TLS failed");
-        debug!("Configuration du canal TLS réussie");
+    debug!("Endpoint: {}", endpoint);
 
-        debug!("Établissement de la connexion...");
-        let connect_timeout = Duration::from_millis(1000);
-        let channel  = match timeout(connect_timeout, endpoint.connect()).await {
-            Ok(Ok(ch)) => {
-                debug!("Connexion TCP/TLS établie avec succès");
-                ch
-            }
-            Ok(Err(e)) => {
-                debug!("Échec de la connexion TCP/TLS: {}", e);
-                debug!("Type d'erreur: {:?}", e);
-                return Err(e.into());
-            }
-            Err(e) => {
-                debug!("Timeout atteint lors de la connexion TCP/TLS");
-                return Err(e.into());
-            }
-        };
-
-        debug!("Création du client gRPC...");
-        client = CaveTelemetryClient::new(channel);
-        debug!("Client gRPC créé avec succès et connecté avec TLS à code-insight.simvia-app.fr:8443");
-    }
-
-    debug!("Construction de la requête Telemetry:");
-    debug!("  - user_id: {}", e.user_id);
-    debug!("  - time_execution: {} ms", e.time_execution);
-    debug!("  - valid_result: {}", e.valid_result);
-    debug!("  - timezone: {}", e.timezone);
-    debug!("  - version: {}", e.version);
-    debug!("  - id_docker: {}", e.id_docker);
-
-    let request = tonic::Request::new(Telemetry {
+    let payload = TelemetryPayload {
         user_id: e.user_id.clone(),
         time_execution: e.time_execution as i64,
         valid_result: e.valid_result,
         timezone: e.timezone.clone(),
         version: e.version.clone(),
         id_docker: e.id_docker.clone(),
-    });
+        r#type: 0, // 0 for cave, 1 for vs-code-aster
+    };
 
-    debug!("Envoi de la requête telemetry via gRPC...");
-    match client.send_telemetry(request).await {
+    debug!("Construction de la requête Telemetry:");
+    debug!("  - user_id: {}", payload.user_id);
+    debug!("  - time_execution: {} ms", payload.time_execution);
+    debug!("  - valid_result: {}", payload.valid_result);
+    debug!("  - timezone: {}", payload.timezone);
+    debug!("  - version: {}", payload.version);
+    debug!("  - id_docker: {}", payload.id_docker);
+    debug!("  - type: {}", payload.r#type);
+
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_millis(1000))
+        .build()?;
+
+    debug!("Envoi de la requête telemetry via HTTP POST...");
+    match client.post(endpoint).json(&payload).send().await {
         Ok(response) => {
-            debug!("✅ Requête telemetry envoyée avec succès!");
-            debug!("Réponse du serveur: {:?}", response);
-            debug!("=== FIN DE LA TÉLÉMÉTRIE (SUCCÈS) ===");
+            let status = response.status();
+            if status.is_success() {
+                debug!("✅ Requête telemetry envoyée avec succès!");
+                debug!("Status: {}", status);
+                if let Ok(body) = response.text().await {
+                    debug!("Réponse du serveur: {}", body);
+                }
+                debug!("=== FIN DE LA TÉLÉMÉTRIE (SUCCÈS) ===");
+            } else {
+                debug!("❌ Échec de l'envoi de la requête telemetry");
+                debug!("Status: {}", status);
+                if let Ok(body) = response.text().await {
+                    debug!("Erreur détaillée: {}", body);
+                }
+                debug!("=== FIN DE LA TÉLÉMÉTRIE (ÉCHEC) ===");
+                return Err(format!("HTTP error: {}", status).into());
+            }
         }
         Err(e) => {
             debug!("❌ Échec de l'envoi de la requête telemetry");
             debug!("Erreur détaillée: {}", e);
-            debug!("Type d'erreur gRPC: {:?}", e);
-            debug!("Code d'erreur: {:?}", e.code());
-            debug!("Message d'erreur: {}", e.message());
             debug!("=== FIN DE LA TÉLÉMÉTRIE (ÉCHEC) ===");
             return Err(e.into());
         }

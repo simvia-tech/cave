@@ -19,6 +19,5 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut file = fs::File::create(out_dir.join("cave.1")).unwrap();
     man.render(&mut file).unwrap();
 
-    tonic_build::compile_protos("proto/cave_telem.proto")?;
     Ok(())
 }
