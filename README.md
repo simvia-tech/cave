@@ -60,6 +60,12 @@ cave --help
 man cave
 ```
 
+At each run, `cave` will check for updates and notify you if a new version is available. To disable this feature, use:
+
+```bash
+cave config disable-update-check
+```
+
 ## Usage
 
 For detailed user documentation, please visit our [User Documentation](https://github.com/simvia-tech/cave/blob/dev/docs/man.md).

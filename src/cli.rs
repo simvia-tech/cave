@@ -4,7 +4,7 @@ use clap::{Parser, Subcommand};
 #[command(name = env!("CARGO_PKG_NAME"), version = env!("CARGO_PKG_VERSION"))]
 pub struct Cli {
     #[command(subcommand)]
-    pub command : Command,
+    pub command: Command,
 }
 
 #[derive(Subcommand)]
@@ -12,30 +12,30 @@ pub enum Command {
     ///Define the default version
     Use {
         ///Code aster version : stable, testing or under this format : 1x.x.xx
-        version : String,
+        version: String,
     },
     ///Define the directory version
     Pin {
-        ///Code aster version : stable, testing or under this format : 1x.x.xx 
-        version : String,
+        ///Code aster version : stable, testing or under this format : 1x.x.xx
+        version: String,
     },
-    ///Run code_aster 
+    ///Run code_aster
     #[command(override_usage = "cave run -- [ARGS]")]
     Run {
-        ///Optional args followed by export file 
+        ///Optional args followed by export file
         #[arg(trailing_var_arg = true)]
         #[arg(value_name = "ARGS")]
         args: Vec<String>,
     },
-    ///List downloaded images 
+    ///List downloaded images
     List {
         ///Optionnal Expression to match, ex : "cave list 16"
-        prefix : Option<String>,
+        prefix: Option<String>,
     },
     ///List available images on dockerhub
     Available {
         ///Optionnal Expression to match, ex : "cave list 16"
-        prefix : Option<String>,
+        prefix: Option<String>,
     },
     ///Configurate cave
     Config {
@@ -50,11 +50,15 @@ pub enum ConfigAction {
     EnableAutoUpdate,
     /// Deactivate auto update for stable/testing versions (default)
     DisableAutoUpdate,
+    /// Enable automatic new cave release check (default)
+    EnableUpdateCheck,
+    /// Disable automatic new cave release check
+    DisableUpdateCheck,
     // TODO : uncomment to have registry option
-    //  
+    //
     // ///Define a personnal registry
     // SetRegistry {
-    //     ///Repository 
+    //     ///Repository
     //     repo : String,
     //     ///Username
     //     user : String,
@@ -66,5 +70,5 @@ pub enum ConfigAction {
     ///Enable version usage tracking (default)
     EnableUsageTracking,
     ///Disable version usage tracking
-    DisableUsageTracking
+    DisableUsageTracking,
 }

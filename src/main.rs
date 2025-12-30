@@ -61,9 +61,9 @@ fn main() -> io::Result<()> {
         }
     };
 
-    // If auto_update is enabled, check for updates
+    // If auto_release_check is enabled, check for new cave release
     if let Ok(cfg) = read_config() {
-        if cfg.auto_update {
+        if cfg.auto_release_check {
             let current = env!("CARGO_PKG_VERSION");
             if let Err(e) = check_latest_version(current) {
                 eprintln!("Failed to check for updates: {}", e);
@@ -81,6 +81,8 @@ fn main() -> io::Result<()> {
             match action {
                 ConfigAction::EnableAutoUpdate => set_auto_update(true),
                 ConfigAction::DisableAutoUpdate => set_auto_update(false),
+                ConfigAction::EnableUpdateCheck => set_auto_release_check(true),
+                ConfigAction::DisableUpdateCheck => set_auto_release_check(false),
                 ConfigAction::EnableUsageTracking => set_version_tracking(true),
                 ConfigAction::DisableUsageTracking => set_version_tracking(false),
                 // TODO : uncomment to have registry option
