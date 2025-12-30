@@ -47,6 +47,8 @@ pub enum CaveError {
     VersionNotInstalled(String),
     /// HTTP request error.
     HttpError(String),
+    /// Error checking for new cave releases.
+    CheckReleaseError(String),
     /// Docker is not installed.
     NoDocker,
     /// No internet connection for the client
@@ -81,7 +83,9 @@ impl fmt::Display for CaveError {
             CaveError::VersionNotInstalled(ver) =>
                 write!(f, "Invalid version : '{}', not installed. Run cave pin {}.", ver, ver),
             CaveError::HttpError(e) =>
-                write!(f, "Error pulling image versions : {}", e),
+                write!(f, "HTTP(s) error : {}", e),
+            CaveError::CheckReleaseError(e) =>
+                write!(f, "Error checking for new cave release : {}", e),
             CaveError::NoDocker =>
                 write!(f, "Docker not found. Please install Docker and try again."),
             CaveError::NoInternetConnection =>
@@ -422,20 +426,20 @@ pub fn find_export_file(requested: &str) -> Result<(), CaveError> {
 
 pub fn check_latest_version(current: &str) -> Result<(), CaveError> {
     let client = Client::builder()
-        .timeout(Duration::from_secs(3))
+        .timeout(Duration::from_millis(500))
         .user_agent("cave-updater")
         .build()
-        .map_err(|e| CaveError::HttpError(e.to_string()))?;
+        .map_err(|e| CaveError::CheckReleaseError(e.to_string()))?;
 
     // GitHub redirect to the latest release (302)
     let resp = client
         .get("https://api.github.com/repos/simvia-tech/cave/releases/latest")
         .send()
-        .map_err(|e| CaveError::HttpError(e.to_string()))?;
+        .map_err(|e| CaveError::CheckReleaseError(e.to_string()))?;
 
     let json: serde_json::Value = resp
         .json()
-        .map_err(|e| CaveError::HttpError(e.to_string()))?;
+        .map_err(|e| CaveError::CheckReleaseError(e.to_string()))?;
 
     let latest_tag = json["tag_name"]
         .as_str()
