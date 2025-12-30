@@ -150,6 +150,20 @@ Disable automatic update checks (default behavior).
 cave config disable-auto-update
 ```
 
+- `enable-update-check`
+Enable automatic new cave release checks (default behavior).
+
+```bash
+cave config enable-update-check
+```
+
+- `disable-update-check`
+Disable automatic new cave release checks.
+
+```bash
+cave config disable-update-check
+```
+
 - `enable-usage-tracking` (default)
 Enables anonymous telemetry that tracks which code_aster versions you run. This data helps improve `cave`. No personal or sensitive data is collected.
 
