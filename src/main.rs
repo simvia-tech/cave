@@ -4,26 +4,26 @@
 //! and dispatching them to the corresponding module functions.
 //! Errors are handled per-command and printed to `stderr` before exiting
 //! with a non-zero status when necessary.
-//! 
-//! The structure of the cli is described in the cli.rs file. It's in this file you can 
+//!
+//! The structure of the cli is described in the cli.rs file. It's in this file you can
 //! modify the cli's commands.
 
 mod cli;
-mod manage;
-mod docker;
 mod config;
+mod docker;
+mod manage;
 mod telemetry;
 
-use std::io;
 use clap::Parser;
 use cli::{Cli, Command, ConfigAction};
-use manage::*;
 use config::*;
-use std::process;
-use std::env;
-use log::LevelFilter;
-use log::debug;
 use env_logger::Builder;
+use log::debug;
+use log::LevelFilter;
+use manage::*;
+use std::env;
+use std::io;
+use std::process;
 
 fn init_logging() {
     let debug_enabled = env::var("CAVE_DEBUG").map(|v| v == "true").unwrap_or(false);
@@ -37,7 +37,6 @@ fn init_logging() {
 
     builder.init();
 }
-
 
 /// Entry point for the `cave` CLI binary.
 ///
@@ -61,6 +60,16 @@ fn main() -> io::Result<()> {
             process::exit(1);
         }
     };
+
+    // If auto_update is enabled, check for updates
+    if let Ok(cfg) = read_config() {
+        if cfg.auto_update {
+            let current = env!("CARGO_PKG_VERSION");
+            if let Err(e) = check_latest_version(current) {
+                eprintln!("Failed to check for updates: {}", e);
+            }
+        }
+    }
 
     let result = match args.command {
         Command::Use { version } => set_version(version, true),
