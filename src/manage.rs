@@ -11,16 +11,20 @@
 //! Errors are centralized in the [`CaveError`] enum, which provides
 //! descriptive messages for all failure cases.
 
-use std::{
-    cmp::Ordering, fmt, fs, io::{self, Write}, path::{Path, PathBuf}
-};
+use crate::config::read_config;
 use crate::docker::*;
-use crate::config::{read_config};
 use colored::*;
 use regex::Regex;
+use std::{
+    cmp::Ordering,
+    fmt, fs,
+    io::{self, Write},
+    path::{Path, PathBuf},
+};
 // TODO : uncomment to have registry option
 //use crate::config::Config;
-
+use reqwest::blocking::Client;
+use semver::Version;
 
 /// Different error types that can occur when using the `cave` CLI.
 #[derive(Debug)]
@@ -52,7 +56,9 @@ pub enum CaveError {
     /// code_aster related error (commands, wrong file, etc.).
     CodeAsterError(String),
     ///error encountered during the execution data saving
-    TelemetryError(String)
+    TelemetryError(String),
+    /// Error parsing version from GitHub
+    VersionParseError(String),
 }
 
 impl fmt::Display for CaveError {
@@ -86,6 +92,8 @@ impl fmt::Display for CaveError {
             write!(f, "code_aster error: {}", msg),
             CaveError::TelemetryError(msg) =>
             write!(f, "telemetry error: {}", msg),
+            CaveError::VersionParseError(msg) =>
+                write!(f, "Version parse error: {}", msg),
         }
     }
 }
@@ -134,7 +142,10 @@ pub fn set_version(version: String, default_version: bool) -> Result<(), CaveErr
     } else {
         let exists_remotely = exists_remotely(&true_version)?;
         if exists_remotely {
-            println!("Version '{}' not installed. Download it? (y/n):", true_version);
+            println!(
+                "Version '{}' not installed. Download it? (y/n):",
+                true_version
+            );
             let mut input = String::new();
             io::stdin().read_line(&mut input)?;
             if input.trim().to_lowercase() == "y" {
@@ -281,7 +292,12 @@ pub fn print_remote_versions(prefix: String) -> Result<(), CaveError> {
             }
             let installed = exists_locally(&tag)?;
             if installed {
-                println!("{:<15}{:<15}{:<15}", tag.blue().bold(), short_date.blue().bold(), image);
+                println!(
+                    "{:<15}{:<15}{:<15}",
+                    tag.blue().bold(),
+                    short_date.blue().bold(),
+                    image
+                );
             } else {
                 println!("{:<15}{:<15}{:<15}", tag, short_date, image);
             }
@@ -302,14 +318,14 @@ fn version_cmp(a: &str, b: &str) -> Ordering {
 use std::net::TcpStream;
 use std::time::Duration;
 
-//check the internet connection 
+//check the internet connection
 fn internet_available() -> bool {
     TcpStream::connect_timeout(
         &"8.8.8.8:53".parse().unwrap(), // Google DNS
-        Duration::from_secs(2)
-    ).is_ok()
+        Duration::from_secs(2),
+    )
+    .is_ok()
 }
-
 
 /// Reads the currently configured `code_aster` version from the `.cave` file.
 ///
@@ -404,3 +420,39 @@ pub fn find_export_file(requested: &str) -> Result<(), CaveError> {
     }
 }
 
+pub fn check_latest_version(current: &str) -> Result<(), CaveError> {
+    let client = Client::builder()
+        .timeout(Duration::from_secs(3))
+        .user_agent("cave-updater")
+        .build()
+        .map_err(|e| CaveError::HttpError(e.to_string()))?;
+
+    // GitHub redirect to the latest release (302)
+    let resp = client
+        .get("https://api.github.com/repos/simvia-tech/cave/releases/latest")
+        .send()
+        .map_err(|e| CaveError::HttpError(e.to_string()))?;
+
+    let json: serde_json::Value = resp
+        .json()
+        .map_err(|e| CaveError::HttpError(e.to_string()))?;
+
+    let latest_tag = json["tag_name"]
+        .as_str()
+        .ok_or_else(|| CaveError::VersionParseError("Invalid GitHub tag".to_string()))?;
+
+    // Parse semantic versions
+    let latest = Version::parse(latest_tag.trim_start_matches('v'))
+        .map_err(|_| CaveError::VersionParseError(latest_tag.to_string()))?;
+    let local = Version::parse(current.trim_start_matches('v'))
+        .map_err(|_| CaveError::VersionParseError(current.to_string()))?;
+
+    if latest > local {
+        println!(
+            "🔔 New cave version available: {} (current: {}) 🔔\nDownload: https://github.com/simvia-tech/cave/releases/latest",
+            latest, local
+        );
+    }
+
+    Ok(())
+}
