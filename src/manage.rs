@@ -392,35 +392,15 @@ fn read_cave_version() -> Result<String, CaveError> {
     }
 }
 
-fn find_export_file(requested: &str) -> Result<(), CaveError> {
-    let entries = fs::read_dir(".").map_err(CaveError::IoError)?;
-    let mut export_files = vec![];
-    for entry in entries {
-        let entry = entry.map_err(CaveError::IoError)?;
-        let path = entry.path();
-        if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("export") {
-            if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                export_files.push(name.to_string());
-            }
-        }
-    }
-    if export_files.contains(&requested.to_string()) {
+pub fn find_export_file(requested: &str) -> Result<(), CaveError> {
+    let path = Path::new(requested);
+    if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("export") {
         Ok(())
     } else {
-        let message = if export_files.is_empty() {
-            format!("Export file '{}' not found.", requested)
-        } else {
-            let joined_files = export_files
-                .iter()
-                .map(|f| format!("  - {}", f))
-                .collect::<Vec<_>>()
-                .join("\n");
-            format!(
-                "Export file '{}' not found.\nAvailable .export files:\n{}",
-                requested, joined_files
-            )
-        };
-        Err(CaveError::FileNotFound(message))
+        Err(CaveError::FileNotFound(format!(
+            "Export file '{}' not found or invalid.",
+            requested
+        )))
     }
 }
 
