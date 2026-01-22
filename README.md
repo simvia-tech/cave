@@ -25,7 +25,7 @@ CAVE is a CLI tool that leverages Docker to conveniently manage multiple code_
 
 ### Installation with linux packages
 
-#### Debian based
+#### Debian based (ubuntu, linux mint ...)
 
 Fetch the [latest release](https://github.com/simvia-tech/cave/releases) .deb file, then run :
 
