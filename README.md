@@ -23,6 +23,14 @@ CAVE is a CLI tool that leverages Docker to conveniently manage multiple code_
 
 > This software require to first having installed docker.
 
+### Quick Install (recommended)
+
+```bash
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/simvia-tech/cave/main/tools/install.sh)"
+```
+
+This will auto-detect your Linux distribution and install the appropriate package (`.deb`, `.rpm`, or binary tarball).
+
 ### Installation with linux packages
 
 #### Debian based (ubuntu, linux mint ...)

@@ -1,7 +1,9 @@
 name: create release
 on:
   push:
-    branches: [main]
+    tags:
+      - 'v*.*.*'
+      - '[0-9]+.*.*'
 
 jobs:
   build:
@@ -16,8 +18,15 @@ jobs:
     steps:
         - name: Checkout repository
           uses: actions/checkout@v4
-        - name: Get latest tag
+        - name: Extract version from tag
           id: version
+          run: |
+            # Extract version from tag (remove 'v' prefix if present)
+            TAG_NAME=${GITHUB_REF#refs/tags/}
+            VERSION=${TAG_NAME#v}
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+        - name: Verify version matches Cargo.toml
           run: |
             sudo apt-get update -y
             sudo apt-get install -y wget
@@ -25,17 +34,21 @@ jobs:
             wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
             chmod +x /usr/local/bin/yq
         
-            VERSION=$(yq eval '.package.version' Cargo.toml)
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            CARGO_VERSION=$(yq eval '.package.version' Cargo.toml)
+            if [ "$CARGO_VERSION" != "${{ steps.version.outputs.version }}" ]; then
+              echo "Error: Tag version (${{ steps.version.outputs.version }}) does not match Cargo.toml version ($CARGO_VERSION)"
+              exit 1
+            fi
+            echo "Version verified: $CARGO_VERSION"
         - name: release
           uses: actions/create-release@v1
           id: create_release
           with:
-            draft: true
+            draft: false
             body_path: CHANGELOG.md
             prerelease: false
             release_name: Release ${{ steps.version.outputs.version }}
-            tag_name: ${{ github.ref }}
+            tag_name: ${{ steps.version.outputs.tag }}
           env:
             GITHUB_TOKEN: ${{ github.token }}
   upload-artifacts:
@@ -103,3 +116,20 @@ jobs:
             asset_path: ./${{ github.event.repository.name }}_${{ needs.create-release.outputs.version }}.tar.gz
             asset_name: ${{ github.event.repository.name }}_${{ needs.create-release.outputs.version }}.tar.gz
             asset_content_type: application/gzip
+
+        - name: Download man page
+          uses: actions/download-artifact@v4
+          with:
+            artifact-ids: ${{ needs.build.outputs.man-artifact }}
+            path: ./man/
+            merge-multiple: true
+
+        - name: Upload man page
+          uses: actions/upload-release-asset@v1
+          env:
+            GITHUB_TOKEN: ${{ github.token }}
+          with:
+            upload_url: ${{ needs.create-release.outputs.upload_url }}
+            asset_path: ./man/cave.1
+            asset_name: cave.1
+            asset_content_type: application/x-troff-man
