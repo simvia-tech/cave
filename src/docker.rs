@@ -14,6 +14,9 @@ use crate::telemetry::{send_execution_data, ExecutionData};
 use log::debug;
 use std::env;
 
+#[cfg(unix)]
+use std::os::unix::fs::MetadataExt;
+
 // TODO : uncomment to have registry option
 // use regex::Regex;
 // use crate::config::Registry;
@@ -221,12 +224,18 @@ pub fn docker_aster(version: &str, export_file: &Option<String>, args: &Vec<Stri
     let volume_arg = format!("{}:/home/user/data", current_dir.display());
     let image = format!("simvia/code_aster:{}", version);
     let export = export_file.clone().unwrap_or_default();
-    let docker_command = format!("run_aster {} {}", args.join(" "), export);
+    let docker_command = format!("source /opt/activate.sh &&  run_aster {} {}", args.join(" "), export);
+
+    // Get the current user's UID and GID to avoid permission issues
+    let (uid, gid) = get_uid_gid();
+    let user_arg = format!("{}:{}", uid, gid);
 
     let mut child = Command::new("docker")
         .arg("run")
         .arg("--rm")
         .arg("-it")
+        .arg("--user")
+        .arg(&user_arg)
         .arg("-v")
         .arg(&volume_arg)
         .arg("-w")
@@ -295,6 +304,36 @@ pub fn docker_aster(version: &str, export_file: &Option<String>, args: &Vec<Stri
     Ok(())
 }
 
+
+/// Returns the current user's UID and GID.
+/// On Unix systems, gets the actual UID/GID.
+/// On Windows, returns (1000, 1000) as default.
+fn get_uid_gid() -> (u32, u32) {
+    #[cfg(unix)]
+    {
+        // Try to get UID/GID from the current directory's metadata
+        if let Ok(metadata) = std::env::current_dir().and_then(|p| std::fs::metadata(p)) {
+            (metadata.uid(), metadata.gid())
+        } else {
+            // Fallback to environment or default
+            let uid = std::env::var("UID")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(1000);
+            let gid = std::env::var("GID")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(1000);
+            (uid, gid)
+        }
+    }
+    
+    #[cfg(not(unix))]
+    {
+        // On Windows, return default values
+        (1000, 1000)
+    }
+}
 
 pub fn image_id(version: &str) -> Result<String, CaveError> {
     let reference = format!("simvia/code_aster:{}", version);
