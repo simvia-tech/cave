@@ -209,9 +209,27 @@ pub fn run_aster(args: &Vec<String>) -> Result<(), CaveError> {
         _ => (None, args.to_vec()),
     };
 
-    docker_aster(&version, &export, &rest_args)?;
+    docker_aster(&version, DockerMode::RunAster { export_file: &export, args: &rest_args })?;
     Ok(())
 }
+
+/// Start interactive shell in the container 
+/// 
+/// # Errors
+/// - [`CaveError::VersionNotInstalled`] if the configured version is not installed locally.
+/// - [`CaveError::FileNotFound`] if the `.export` file does not exist.
+/// - Any error returned by [`docker_aster`].
+
+pub fn shell_aster() -> Result<(), CaveError> {
+    let version = read_cave_version()?;
+    if !exists_locally(&version)? {
+        return Err(CaveError::VersionNotInstalled(version));
+    }
+
+    docker_aster(&version, DockerMode::Shell)?;
+    Ok(())
+}
+
 
 /// Prints a list of locally available versions filtered by an optionnal prefix.
 ///
