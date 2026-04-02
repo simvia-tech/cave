@@ -75,6 +75,7 @@ fn main() -> io::Result<()> {
         Command::Use { version } => set_version(version, true),
         Command::Pin { version } => set_version(version, false),
         Command::Run { args } => run_aster(&args),
+        Command::Shell {} => shell_aster(),
         Command::List { prefix } => print_local_versions(prefix.unwrap_or_default()),
         Command::Available { prefix } => print_remote_versions(prefix.unwrap_or_default()),
         Command::Config { action } => {
