@@ -15,7 +15,6 @@ use crate::config::read_config;
 use crate::docker::*;
 use colored::*;
 use regex::Regex;
-use uuid::NonNilUuid;
 use std::{
     cmp::Ordering,
     fmt, fs,
