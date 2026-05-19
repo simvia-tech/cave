@@ -27,6 +27,8 @@ pub enum Command {
         #[arg(value_name = "ARGS")]
         args: Vec<String>,
     },
+    ///Start an interactive shell in the container
+    Shell,
     ///List downloaded images
     List {
         ///Optionnal Expression to match, ex : "cave list 16"

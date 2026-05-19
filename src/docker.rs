@@ -209,29 +209,35 @@ pub fn pull_version(version: &str) -> Result<(), CaveError> {
 }
 
 
-/// Runs code_aster with Docker with the given version, optional export file, and arguments.
-/// Envoie ensuite les données d'exécution via gRPC si l'exécution n'est pas interactive.
+pub enum DockerMode<'a> {
+    RunAster { export_file: &'a Option<String>, args: &'a Vec<String> },
+    Shell,
+}
+
+/// Runs code_aster with Docker with the given version and mode.
+///
+/// - [`DockerMode::RunAster`]: sources the activate script and runs `run_aster` with the given args and export file.
+/// - [`DockerMode::Shell`]: drops the user into an interactive bash shell inside the container.
 ///
 /// # Example
 /// ```
-/// docker_aster("22.0", &Some("output.msh".to_string()), &vec!["command".to_string()])
+/// docker_aster("22.0", DockerMode::RunAster { export_file: &Some("output.msh".to_string()), args: &vec![] })
 ///     .expect("Failed to run Code_Aster in Docker");
+/// docker_aster("22.0", DockerMode::Shell).expect("Failed to start shell");
 /// ```
-pub fn docker_aster(version: &str, export_file: &Option<String>, args: &Vec<String>) -> Result<(), CaveError> {
+pub fn docker_aster(version: &str, mode: DockerMode) -> Result<(), CaveError> {
     let start = std::time::Instant::now();
 
     let current_dir = std::env::current_dir().map_err(CaveError::IoError)?;
     let volume_arg = format!("{}:/home/user/data", current_dir.display());
     let image = format!("simvia/code_aster:{}", version);
-    let export = export_file.clone().unwrap_or_default();
-    let docker_command = format!("source /opt/activate.sh &&  run_aster {} {}", args.join(" "), export);
 
     // Get the current user's UID and GID to avoid permission issues
     let (uid, gid) = get_uid_gid();
     let user_arg = format!("{}:{}", uid, gid);
 
-    let mut child = Command::new("docker")
-        .arg("run")
+    let mut cmd = Command::new("docker");
+    cmd.arg("run")
         .arg("--rm")
         .arg("-it")
         .arg("--user")
@@ -240,11 +246,22 @@ pub fn docker_aster(version: &str, export_file: &Option<String>, args: &Vec<Stri
         .arg(&volume_arg)
         .arg("-w")
         .arg("/home/user/data")
-        .arg(&image)
-        .arg("/bin/bash")
-        .arg("-i")
-        .arg("-c")
-        .arg(&docker_command)
+        .arg(&image);
+
+    let is_shell = matches!(mode, DockerMode::Shell);
+
+    match mode {
+        DockerMode::RunAster { export_file, args } => {
+            let export = export_file.clone().unwrap_or_default();
+            let docker_command = format!("source /opt/activate.sh &&  run_aster {} {}", args.join(" "), export);
+            cmd.arg("/bin/bash").arg("-i").arg("-c").arg(docker_command);
+        }
+        DockerMode::Shell => {
+            cmd.arg("/bin/bash");
+        }
+    }
+
+    let mut child = cmd
         .stdin(Stdio::inherit())
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
@@ -258,9 +275,8 @@ pub fn docker_aster(version: &str, export_file: &Option<String>, args: &Vec<Stri
         })?;
 
     let status = child.wait().map_err(CaveError::IoError)?;
-    let interactive = args.contains(&"-i".to_string());
 
-    if !interactive {
+    if !is_shell {
         debug!("Début de la telemetry");
         debug!("Début de la collecte des données du run");
 
